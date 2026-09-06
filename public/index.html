@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Airbnb Photo Downloader Pro | Baixar todas as fotos do anúncio com 1 clique</title>
+  <meta name="description" content="Ferramenta rápida e gratuita para extrair e baixar todas as fotos em alta resolução de qualquer anúncio do Airbnb em um único arquivo ZIP.">
+  
+  <!-- Google Fonts: Outfit & Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Background Decorative Glows -->
+  <div class="bg-glow glow-1"></div>
+  <div class="bg-glow glow-2"></div>
+
+  <div class="app-container">
+    
+    <!-- Top Navigation Header -->
+    <header class="main-header">
+      <div class="logo-area">
+        <div class="logo-icon">
+          <i class="fa-solid fa-cloud-arrow-down"></i>
+        </div>
+        <div class="logo-text">
+          <h1>Airbnb <span>Photo Downloader</span></h1>
+          <span class="badge-pro">PRO HD</span>
+        </div>
+      </div>
+      <div class="header-actions">
+        <span class="status-indicator">
+          <span class="dot pulse"></span> Servidor Pronto
+        </span>
+      </div>
+    </header>
+
+    <!-- Main Hero Search Section -->
+    <main>
+      <section class="hero-section">
+        <div class="hero-badge">
+          <i class="fa-solid fa-wand-magic-sparkles"></i> Extração Instantânea em Alta Resolução
+        </div>
+        <h2>Baixe todas as fotos do anúncio do Airbnb <span>com 1 Clique</span></h2>
+        <p class="hero-subtitle">
+          Cole o link da propriedade abaixo para extrair a galeria completa em máxima qualidade (1920p) e baixar tudo compactado em um arquivo ZIP.
+        </p>
+
+        <!-- Search Form Card -->
+        <div class="search-box-card">
+          <form id="scrape-form" onsubmit="handleFormSubmit(event)">
+            <div class="input-wrapper">
+              <i class="fa-solid fa-link input-icon"></i>
+              <input 
+                type="url" 
+                id="airbnb-url-input" 
+                placeholder="Cole aqui o link do Airbnb (ex: https://www.airbnb.com.br/rooms/...)" 
+                required 
+                autocomplete="off"
+              />
+              <button type="button" class="btn-paste" onclick="pasteFromClipboard()" title="Colar link da área de transferência">
+                <i class="fa-solid fa-paste"></i> Colar
+              </button>
+            </div>
+            <button type="submit" id="btn-search" class="btn-primary">
+              <span class="btn-text"><i class="fa-solid fa-magnifying-glass"></i> Extrair Fotos</span>
+              <span class="btn-loader spinner hidden"></span>
+            </button>
+          </form>
+          
+          <div class="search-hints">
+            <span><i class="fa-solid fa-circle-check"></i> Suporta airbnb.com e airbnb.com.br</span>
+            <span><i class="fa-solid fa-circle-check"></i> Sem perda de qualidade</span>
+            <span><i class="fa-solid fa-circle-check"></i> Download único via ZIP</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Loading State Overlay -->
+      <section id="loading-state" class="state-container hidden">
+        <div class="loader-card glass-panel">
+          <div class="animated-radar">
+            <div class="radar-circle"></div>
+            <i class="fa-solid fa-images icon-loading"></i>
+          </div>
+          <h3 id="loading-status-title">Conectando ao Airbnb...</h3>
+          <p id="loading-status-desc">Varrendo a página do imóvel e recuperando a galeria de imagens em ultra definição.</p>
+          <div class="progress-bar-container">
+            <div class="progress-bar-fill" id="progress-fill"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Error State -->
+      <section id="error-state" class="state-container hidden">
+        <div class="error-card glass-panel">
+          <div class="error-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+          <h3>Ops! Não conseguimos obter as fotos</h3>
+          <p id="error-message-text">Ocorreu um erro ao acessar o anúncio informado.</p>
+          <button class="btn-secondary" onclick="resetApp()">
+            <i class="fa-solid fa-arrow-rotate-left"></i> Tentar Novamente
+          </button>
+        </div>
+      </section>
+
+      <!-- Results Gallery Section -->
+      <section id="results-state" class="state-container hidden">
+        
+        <!-- Property Info & Global Actions Bar -->
+        <div class="results-header glass-panel">
+          <div class="property-info">
+            <div class="info-badge">
+              <i class="fa-solid fa-house"></i> Anúncio Localizado
+            </div>
+            <h3 id="property-title">Título da Propriedade</h3>
+            <p id="property-meta" class="property-meta"><i class="fa-solid fa-images"></i> <span id="photo-count-badge">0</span> fotos encontradas em alta resolução</p>
+          </div>
+
+          <div class="action-buttons-group">
+            <div class="selection-controls">
+              <button class="btn-chip" onclick="selectAllPhotos(true)">
+                <i class="fa-solid fa-square-check"></i> Marcar Todas
+              </button>
+              <button class="btn-chip" onclick="selectAllPhotos(false)">
+                <i class="fa-solid fa-square"></i> Desmarcar Todas
+              </button>
+            </div>
+
+            <button id="btn-download-zip" class="btn-download-zip" onclick="downloadSelectedZip()">
+              <i class="fa-solid fa-file-zipper"></i>
+              <span>Baixar Selecionadas (.ZIP)</span>
+              <span id="selected-count-tag" class="count-tag">0</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Photo Grid Gallery -->
+        <div id="photos-grid" class="photos-grid">
+          <!-- Photo cards injected dynamically by app.js -->
+        </div>
+
+      </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="main-footer">
+      <p>Airbnb Photo Downloader Pro &copy; 2026 • Baixe imagens de imóveis com facilidade e praticidade</p>
+    </footer>
+
+  </div>
+
+  <!-- Lightbox Modal for Photo Zoom -->
+  <div id="lightbox-modal" class="lightbox-modal hidden" onclick="closeLightboxOnBackdrop(event)">
+    <div class="lightbox-content glass-panel">
+      <button class="lightbox-close" onclick="closeLightbox()" title="Fechar (Esc)"><i class="fa-solid fa-xmark"></i></button>
+      <div class="lightbox-body">
+        <button class="lightbox-nav nav-prev" onclick="navigateLightbox(-1)"><i class="fa-solid fa-chevron-left"></i></button>
+        <div class="lightbox-img-wrapper">
+          <img id="lightbox-img" src="" alt="Ampliação da foto do imóvel">
+          <div class="lightbox-caption">
+            <span id="lightbox-counter">Foto 1 de 1</span>
+            <a id="lightbox-download-link" class="btn-lightbox-download" href="" target="_blank" download>
+              <i class="fa-solid fa-download"></i> Baixar esta foto
+            </a>
+          </div>
+        </div>
+        <button class="lightbox-nav nav-next" onclick="navigateLightbox(1)"><i class="fa-solid fa-chevron-right"></i></button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
